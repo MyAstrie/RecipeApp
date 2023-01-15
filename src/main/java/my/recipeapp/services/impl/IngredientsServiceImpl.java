@@ -33,6 +33,7 @@ public class IngredientsServiceImpl implements IngredientsService {
         if(ingredient.isEmpty()){
             throw new RuntimeException("Ингредиента не существует");
         }
+
         return ingredient;
     }
 
@@ -44,7 +45,7 @@ public class IngredientsServiceImpl implements IngredientsService {
     @Override
     public String deleteIngredient(Long id) {
         ingredientsRepository.remove(id);
-        return "product removed !! " + id;
+        return "ингредиент удален !! " + id;
     }
 
     @Override
