@@ -2,11 +2,9 @@ package my.recipeapp.repository;
 
 import org.springframework.stereotype.Repository;
 import my.recipeapp.model.Ingredient;
-import my.recipeapp.model.Recipe;
 
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public class IngredientsRepository<K,V> extends HashMap<K,V> {
@@ -21,12 +19,7 @@ public class IngredientsRepository<K,V> extends HashMap<K,V> {
     }
 
     public HashMap<K,V> getIngredients(){
-        HashMap<Long, Ingredient> shallowCopy = new HashMap<>();
-        Set<Entry<K, V>> entries = super.entrySet();
-        for (Entry<K, V> mapEntry : entries) {
-            shallowCopy.put((Long) mapEntry.getKey(), (Ingredient) mapEntry.getValue());
-        }
-        return (HashMap<K, V>) shallowCopy;
+        return (HashMap<K, V>) super.clone();
     }
 
     public Ingredient add(Ingredient i){
@@ -44,7 +37,6 @@ public class IngredientsRepository<K,V> extends HashMap<K,V> {
     }
 
     public Ingredient update(Ingredient newIngredient, Long id) {
-
         return (Ingredient) super.put((K) id, (V) newIngredient);
     }
 

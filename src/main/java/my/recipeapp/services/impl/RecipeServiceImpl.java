@@ -32,6 +32,7 @@ public class RecipeServiceImpl implements RecipeService {
         if(recipe.isEmpty()){
             throw new RuntimeException("Рецепт не существует");
         }
+
         return recipe;
     }
 
@@ -45,6 +46,7 @@ public class RecipeServiceImpl implements RecipeService {
         if(recipeRepository.remove(id) == null){
             throw new RuntimeException("Рецепт не существует");
         }
+
         return "рецепт удален !! " + id;
     }
 
