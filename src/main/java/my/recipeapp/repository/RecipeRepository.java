@@ -1,9 +1,10 @@
 package my.recipeapp.repository;
 
-import org.springframework.stereotype.Repository;
 import my.recipeapp.model.Recipe;
+import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Optional;
 
 @Repository
 public class RecipeRepository<K,V> extends HashMap<K,V> {
@@ -40,6 +41,6 @@ public class RecipeRepository<K,V> extends HashMap<K,V> {
     }
 
     public Recipe deleteById(Long id) {
-        return (Recipe) super.remove((K) id);
+        return (Recipe) super.remove(id);
     }
 }

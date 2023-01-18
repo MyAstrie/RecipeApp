@@ -1,7 +1,7 @@
 package my.recipeapp.repository;
 
-import org.springframework.stereotype.Repository;
 import my.recipeapp.model.Ingredient;
+import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -41,6 +41,6 @@ public class IngredientsRepository<K,V> extends HashMap<K,V> {
     }
 
     public Ingredient deleteById(Long id) {
-        return (Ingredient) super.remove((K) id);
+        return (Ingredient) super.remove(id);
     }
 }
