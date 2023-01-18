@@ -1,12 +1,16 @@
 package my.recipeapp.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import my.recipeapp.model.Ingredient;
 import my.recipeapp.repository.IngredientsRepository;
+import my.recipeapp.services.FileService;
 import my.recipeapp.services.IngredientsService;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,13 +18,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class IngredientsServiceImpl implements IngredientsService {
 
-    @Autowired
     private IngredientsRepository<Long, Ingredient> ingredientsRepository;
+    private final FileService fileService;
+
+    @PostConstruct
+    public void init() {
+        ingredientsRepository = new IngredientsRepository<>();
+        readFromFileIngredients();
+    }
 
     @Override
     public Ingredient add(Ingredient ingredient) {
         if(!ingredientsRepository.existsById(ingredient.getId())){
             ingredientsRepository.add(ingredient);
+            saveToFileIngredients();
             return ingredientsRepository.get(ingredient.getId());
         } else {
             throw new RuntimeException("Данный инградиент уже существует");
@@ -45,6 +56,7 @@ public class IngredientsServiceImpl implements IngredientsService {
     @Override
     public String deleteIngredient(Long id) {
         ingredientsRepository.remove(id);
+        saveToFileIngredients();
         return "ингредиент удален !! " + id;
     }
 
@@ -54,11 +66,34 @@ public class IngredientsServiceImpl implements IngredientsService {
             throw new RuntimeException("Вы пытаетесь обновить несуществующий ингредиент");
         }
 
-        return ingredientsRepository.update(newIngredient, id);
+        var tempIng = ingredientsRepository.update(newIngredient, id);
+        saveToFileIngredients();
+        return tempIng;
     }
 
     @Override
     public Ingredient deleteById(Long id) {
-        return ingredientsRepository.deleteById(id);
+        var tempIng = ingredientsRepository.deleteById(id);
+        saveToFileIngredients();
+        return tempIng;
+    }
+
+    private void saveToFileIngredients() {
+        try {
+            String json = new ObjectMapper().writeValueAsString(ingredientsRepository);
+            fileService.saveToFileIngredients(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readFromFileIngredients() {
+        String json = fileService.readFromFileIngredients();
+        try {
+            ingredientsRepository = new ObjectMapper().readValue(json, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 }

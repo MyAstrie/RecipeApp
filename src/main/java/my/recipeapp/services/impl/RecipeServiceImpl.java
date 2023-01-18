@@ -1,12 +1,16 @@
 package my.recipeapp.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import my.recipeapp.model.Recipe;
 import my.recipeapp.repository.RecipeRepository;
+import my.recipeapp.services.FileService;
 import my.recipeapp.services.RecipeService;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,13 +18,21 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RecipeServiceImpl implements RecipeService {
 
-    @Autowired
     private RecipeRepository<Long, Recipe> recipeRepository;
+    private final FileService fileService;
+
+    @PostConstruct
+    public void init() {
+        recipeRepository = new RecipeRepository<>();
+        readFromFileRecipes();
+    }
 
     @Override
     public Recipe add(Recipe recipe){
         if(!recipeRepository.existsById(recipe.getId())) {
-            return recipeRepository.add(recipe);
+            recipeRepository.add(recipe);
+            saveToFileRecipes();
+            return  recipeRepository.get(recipe.getId());
         } else {
             throw new RuntimeException("Данный рецепт уже существует");
         }
@@ -47,6 +59,7 @@ public class RecipeServiceImpl implements RecipeService {
             throw new RuntimeException("Рецепт не существует");
         }
 
+        saveToFileRecipes();
         return "рецепт удален !! " + id;
     }
 
@@ -56,11 +69,34 @@ public class RecipeServiceImpl implements RecipeService {
             throw new RuntimeException("Вы пытаетесь обновить несуществующий рецепт");
         }
 
-        return recipeRepository.update(newRecipe, id);
+        var tempRec = recipeRepository.update(newRecipe, id);
+        saveToFileRecipes();
+        return tempRec;
     }
 
     @Override
     public Recipe deleteById(Long id) {
-        return recipeRepository.deleteById(id);
+        var tempRec = recipeRepository.deleteById(id);
+        saveToFileRecipes();
+        return tempRec;
+    }
+
+    private void saveToFileRecipes() {
+        try {
+            String json = new ObjectMapper().writeValueAsString(recipeRepository);
+            fileService.saveToFileRecipes(json);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readFromFileRecipes() {
+        String json = fileService.readFromFileRecipes();
+        try {
+            recipeRepository = new ObjectMapper().readValue(json, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 }
