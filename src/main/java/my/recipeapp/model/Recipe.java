@@ -1,7 +1,10 @@
 package my.recipeapp.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -26,16 +29,12 @@ public class Recipe implements Serializable {
     private String name;
 
     @Positive(message = "Время готовки должно быть положительно")
-    @NotBlank(message = "Время готовки не может быть пустым")
     private Integer timeToCook;
 
-    @NotBlank
     @ElementCollection
     @Valid
     private List<@Valid Ingredient> ingredients;
 
-    @NotBlank
     @ElementCollection
-    @Valid
     private List<String> steps;
 }
