@@ -3,15 +3,24 @@ package my.recipeapp.controllers;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import my.recipeapp.model.Recipe;
+import my.recipeapp.services.FileService;
 import my.recipeapp.services.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import my.recipeapp.model.Recipe;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -23,9 +32,39 @@ public class RecipeController {
     @Autowired
     private final RecipeService recipeService;
 
+    private final FileService filesService;
+
     @GetMapping
     public String start(){
         return "Страница рецепта";
+    }
+
+    @ApiOperation(value = "Обновить файл рецептов")
+    @PostMapping(value = "/files/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) throws IOException {
+        if(!Objects.equals(file.getOriginalFilename(), "recipe.json")) {
+            throw new RuntimeException("Выберите файл с названием recipe.json");
+        }
+
+        filesService.uploadFile(file);
+        return ResponseEntity.ok().build();
+    }
+
+    @ApiOperation(value = "Скачать файл рецептов")
+    @GetMapping(value = "/files/download")
+    public ResponseEntity<InputStreamResource> downloadFile() throws IOException {
+        File file = filesService.getRecipesFile();
+
+        if (file.exists()) {
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentLength(file.length())
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"recipe.json\"")
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @ApiOperation(value = "Добавить новый рецепт")
