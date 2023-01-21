@@ -1,1 +1,1 @@
-{"1":{"id":1,"name":"string","timeToCook":2,"ingredients":null,"steps":["string"]},"2":{"id":2,"name":"string","timeToCook":2,"ingredients":null,"steps":["string","првиет","как дела"]}}
+{"32":{"id":32,"name":"string","timeToCook":2,"ingredients":[{"id":1,"name":"string","quantity":13,"measurementUnit":"string"}],"steps":["string"]}}

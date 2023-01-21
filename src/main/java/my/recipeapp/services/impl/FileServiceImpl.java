@@ -1,6 +1,10 @@
 package my.recipeapp.services.impl;
 
+import my.recipeapp.model.Ingredient;
+import my.recipeapp.model.Recipe;
 import my.recipeapp.services.FileService;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
@@ -22,6 +27,10 @@ public class FileServiceImpl implements FileService {
 
     @Value("${name.of.recipe.data}")
     private String dataFileRecipesName;
+
+    @Value("${name.of.recipe.docx}")
+    private String dataDocxRecipesName;
+
 
     @Override
     public boolean saveToFileIngredients(String json) {
@@ -48,7 +57,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public String readFromFileIngredients() {
         try {
-            return Files.readString(Path.of(dataPath, dataFileIngredientsName));
+            return Files.readString(Path.of(dataPath, dataFileRecipesName));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -87,6 +96,18 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    private boolean cleanDocxFileRecipes() {
+        try {
+            Path path = Path.of(dataPath, dataDocxRecipesName);
+            Files.deleteIfExists(path);
+            Files.createFile(path);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     @Override
     public void uploadFile(MultipartFile file) throws IOException {
         Path filePath = Path.of(dataPath,file.getOriginalFilename());
@@ -111,5 +132,49 @@ public class FileServiceImpl implements FileService {
     @Override
     public File getRecipesFile() {
         return new File(dataPath + "/" + dataFileRecipesName);
+    }
+
+    @Override
+    public File getRecipeDocx(Map<Long, Recipe> recipeRepository){
+        saveDocxRecipes(recipeRepository);
+        return new File(dataPath + "/" + dataDocxRecipesName);
+    }
+
+    private boolean saveDocxRecipes(Map<Long, Recipe> recipeRepository) {
+        try {
+            Path path = Path.of(dataPath, dataDocxRecipesName);
+            Files.deleteIfExists(path);
+            Files.createFile(path);
+
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.createPackage();
+            MainDocumentPart mainDocumentPart = wordMLPackage.getMainDocumentPart();
+
+            for (Map.Entry<Long, Recipe> entry : recipeRepository.entrySet()) {
+                mainDocumentPart.addStyledParagraphOfText("Title", entry.getValue().getName());
+                mainDocumentPart.addParagraphOfText("Время приготовления: " + entry.getValue().getTimeToCook() + " минут");
+
+                mainDocumentPart.addParagraphOfText("Ингредиенты:");
+                int iterations = 1;
+                for (Ingredient ingredient : entry.getValue().getIngredients()) {
+                    mainDocumentPart.addParagraphOfText(iterations++ + ") " + ingredient.getName() + " " + ingredient.getQuantity() +
+                            " " + ingredient.getMeasurementUnit());
+                }
+
+                mainDocumentPart.addParagraphOfText("Инструкция приготовления:");
+                iterations = 1;
+                for (String step : entry.getValue().getSteps()) {
+                    mainDocumentPart.addParagraphOfText(iterations++ + ") " + step);
+                }
+            }
+
+            File file = new File(String.valueOf(path));
+            wordMLPackage.save(file);
+            return true;
+        } catch (IOException e) {
+            return false;
+        } catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
     }
 }
