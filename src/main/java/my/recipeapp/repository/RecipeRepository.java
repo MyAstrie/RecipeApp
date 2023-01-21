@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @Repository
-public class RecipeRepository<K,V> extends HashMap<K,V> {
+    public class RecipeRepository<K,V> extends HashMap<K,V> {
 
     public boolean existsById(K id) {
         return super.containsKey(id);
@@ -27,6 +27,7 @@ public class RecipeRepository<K,V> extends HashMap<K,V> {
         recipe.setId(r.getId());
         recipe.setName(r.getName());
         recipe.setTimeToCook(r.getTimeToCook());
+        recipe.setIngredients(r.getIngredients());
         recipe.setSteps(r.getSteps());
         super.put((K) recipe.getId(), (V) recipe);
         return recipe;

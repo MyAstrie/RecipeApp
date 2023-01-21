@@ -19,6 +19,8 @@ import javax.validation.Valid;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,7 +53,7 @@ public class RecipeController {
     }
 
     @ApiOperation(value = "Скачать файл рецептов")
-    @GetMapping(value = "/files/download")
+    @GetMapping(value = "/files/download/json")
     public ResponseEntity<InputStreamResource> downloadFile() throws IOException {
         File file = filesService.getRecipesFile();
 
@@ -98,5 +100,29 @@ public class RecipeController {
     @GetMapping("/all")
     public Map<Long,Recipe> getRecipes(){
         return recipeService.getRecipes();
+    }
+
+    @ApiOperation(value = "Скачать файл рецептов")
+    @GetMapping(value = "/files/download/docx")
+    public ResponseEntity<InputStreamResource> downloadDocxFile() throws IOException {
+        File file = filesService.getRecipeDocx(recipeService.getRecipes());
+
+        if (file.exists()) {
+            InputStream is = new FileInputStream(file);
+            InputStreamResource resource = new InputStreamResource(is);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", file.getName()));
+            headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+            headers.add(HttpHeaders.ACCEPT_CHARSET, StandardCharsets.UTF_8.name());
+
+            return ResponseEntity.ok().headers(headers)
+                    .contentLength(file.length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

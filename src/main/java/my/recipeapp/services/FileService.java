@@ -1,9 +1,11 @@
 package my.recipeapp.services;
 
+import my.recipeapp.model.Recipe;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public interface FileService {
 
@@ -17,7 +19,9 @@ public interface FileService {
 
     void uploadFile(MultipartFile file) throws IOException;
 
-    public File getIngredientsFile();
+    File getIngredientsFile();
 
-    public File getRecipesFile();
+    File getRecipesFile();
+
+    File getRecipeDocx(Map<Long, Recipe> recipeRepository);
 }
